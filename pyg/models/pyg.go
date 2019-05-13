@@ -20,7 +20,9 @@ type Address struct {
 	Addr string `orm:"size(100)"`
 	PostCode string`orm:"size()"`
 	Phone string `orm:"size(11)"`
+	IsDefault bool`rom:"default(false)"`
 	User *User `orm:"rel(fk)"`
+
 
 }
 

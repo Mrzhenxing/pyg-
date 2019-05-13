@@ -153,11 +153,13 @@ func (this *Usercontrollers) HandleRegister() {
 	//返回数据
 	this.Redirect("/register-email", 302)
 }
+
 //展示邮箱
 func (this *Usercontrollers) ShowEmail() {
 	this.TplName = "register-email.html"
 
 }
+
 //处理邮箱
 func (this *Usercontrollers) HandleEmail() {
 	//获取数据
@@ -226,7 +228,7 @@ func (this *Usercontrollers) HandleEmail() {
 		return
 	}
 	user.Email = email
-	o.Update(&user,"Email")
+	o.Update(&user, "Email")
 	//处理数据
 
 	//返回数据
@@ -345,25 +347,116 @@ func (this *Usercontrollers) HandleLogin() {
 	} else {
 		this.Ctx.SetCookie("Loginname", user.Name, -1)
 	}
-	this.SetSession("name",user.Name)
+	this.SetSession("name", user.Name)
 	this.Redirect("/index", 302)
 
 }
 
 //退出处理
-func (this *Usercontrollers)LoginOut()  {
+func (this *Usercontrollers) LoginOut() {
 	this.DelSession("name")
-	this.Redirect("/index",302)
+	this.Redirect("/index", 302)
 }
+
 //展示用户中心
-func (this *Usercontrollers)ShowUserCenterInfo()  {
-	//点击用户中心是要先校验是否登录
-
-	this.TplName="user_center_info.html"
+func (this *Usercontrollers) ShowUserCenterInfo() {
+	o:=orm.NewOrm()
+	name:=this.GetSession("name")
+	var user models.User
+	//获取用户名
+	user.Name=name.(string)
+	//查询用户名
+	o.Read(&user,"Name")
+	//查询默认收货地址
+	var address models.Address
+	err:=o.QueryTable("Address").RelatedSel("User").Filter("User__Name",name.(string)).Filter("IsDefault",true).One(&address)
+	if err!=nil{
+		beego.Error("获取默认地址失败")
+	}
+	this.Data["address"]=address
+	this.Data["user"]=user
+	this.TplName = "user_center_info.html"
 }
-func (this *Usercontrollers)ShowSite()  {
-	this.TplName="user_center_site.html"
+
+//展示收货地址
+func (this *Usercontrollers) ShowSite() {
+	///要展示当前地址 需要获取当前用户的默认地址
+	o:=orm.NewOrm()
+	name:=this.GetSession("name")
+	//查询默认地址
+	var address models.Address
+	err:=o.QueryTable("Address").RelatedSel("User").Filter("User__Name",name.(string)).Filter("IsDefault",true).One(&address)
+	if err!=nil{
+		beego.Error("获取默认地址失败")
+	}
+	this.Data["address"]=address
+	this.TplName = "user_center_site.html"
 }
 
+//处理收货地址
+func (this *Usercontrollers) HandleSite() {
+	//获取数据
+	receive := this.GetString("receive")
+	address := this.GetString("address")
+	postCode := this.GetString("postCode")
+	phone := this.GetString("phone")
+	//校验数据
+	if receive == "" || address == "" || postCode == "" || phone == "" {
+		beego.Error("获取数据失败")
+		this.TplName = "user_center_site.html"
+		return
+	}
 
+	//处理数据
+	o := orm.NewOrm()
+	var addr models.Address
 
+	addr.Receiver = receive
+	addr.Addr = address
+	addr.PostCode = postCode
+	addr.Phone = phone
+	name := this.GetSession("name")
+	fmt.Println("11111111111111", name)
+	fmt.Println("11111111111111", phone)
+
+	var user models.User
+	user.Name = name.(string)
+	//先查询在赋值
+	err := o.Read(&user, "Name")
+	if err != nil {
+		beego.Error("用户不存在")
+		this.TplName = "user_center_site.html"
+		return
+	}
+	addr.User = &user
+	//查询用户是否有默认地址，如果没有，直接插入，如果有，把默认地址修改为非默认地址
+	//查询当前用户是否有默认地址
+	var oldaddress models.Address
+	err = o.QueryTable("Address").RelatedSel("User").Filter("User__Name", name.(string)).Filter("IsDefault", true).One(&oldaddress)
+
+	//if err!=nil{
+	//	addr.IsDefault=true
+	//
+	//}else {
+	//	addr.IsDefault=false
+	//	o.Update(&oldaddress})
+	//}
+	//代码优化
+
+	if err == nil {
+		oldaddress.IsDefault=false
+		o.Update(&oldaddress)
+	}
+		addr.IsDefault=true
+
+	fmt.Println("222222222222", addr)
+	_, err = o.Insert(&addr)
+	if err != nil {
+		beego.Error("插入数据失败", err)
+		this.TplName = "user_center_site.html"
+		return
+	}
+	//返回数据
+	this.Redirect("/user/user_center_site", 302)
+
+}

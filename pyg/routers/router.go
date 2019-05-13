@@ -27,7 +27,7 @@ func init() {
 //	用户中心
 	beego.Router("/user/user_center_info",&controllers.Usercontrollers{},"get:ShowUserCenterInfo")
 //	用户地址
-beego.Router("/user/user_center_site",&controllers.Usercontrollers{},"get:ShowSite")
+	beego.Router("/user/user_center_site",&controllers.Usercontrollers{},"get:ShowSite;post:HandleSite")
 }
 func guolvfuc(ctx *context.Context)  {
 	name:=ctx.Input.Session("name")
