@@ -12,6 +12,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	"pyg/pyg/models"
 	"github.com/astaxie/beego/utils"
+	//_ "github.com/weilaihui/fdfs_client"
 )
 
 type Usercontrollers struct {
@@ -373,6 +374,8 @@ func (this *Usercontrollers) ShowUserCenterInfo() {
 	if err!=nil{
 		beego.Error("获取默认地址失败")
 	}
+	this.Data["show"]="用户中心"
+	this.Layout="layout_center_info.html"
 	this.Data["address"]=address
 	this.Data["user"]=user
 	this.TplName = "user_center_info.html"
@@ -389,6 +392,12 @@ func (this *Usercontrollers) ShowSite() {
 	if err!=nil{
 		beego.Error("获取默认地址失败")
 	}
+	qian:=address.Phone[:3]
+	hou:=address.Phone[7:]
+	
+	this.Layout="layout_center_info.html"
+	address.Phone=qian+"****"+hou
+	this.Data["show"]="收货地址"
 	this.Data["address"]=address
 	this.TplName = "user_center_site.html"
 }
