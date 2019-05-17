@@ -31,9 +31,13 @@ func init() {
 	//	生鲜模块
 	beego.Router("/indexsx", &controllers.Goodscontrollers{}, "get:ShowIndexsx")
 	//展示商品详情
-	//beego.Router("/goodsDetail", &controllers.Goodscontrollers{}, "get:ShowDetail")
+	beego.Router("/goodsDetail", &controllers.Goodscontrollers{}, "get:ShowDetail")
 	////展示商品清单
-	//beego.Router("/goodslist", &controllers.Goodscontrollers{}, "get:ShowList")
+	beego.Router("/goodsType", &controllers.Goodscontrollers{}, "get:ShowList")
+	//	加入购物车
+	beego.Router("/addCart", &controllers.Cartcontrollers{}, "post:HandleAddCart")
+	//展示购物车
+	beego.Router("/user/showCart",&controllers.Goodscontrollers{},"get:ShowCart")
 }
 func guolvfuc(ctx *context.Context) {
 	name := ctx.Input.Session("name")

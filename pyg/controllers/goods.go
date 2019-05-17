@@ -4,10 +4,8 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"pyg/pyg/models"
-	//"github.com/astaxie/beego/orm"
-	//"math"
-	//"fmt"
-	//"golang.org/x/net/idna"
+
+	"math"
 	"fmt"
 )
 
@@ -104,8 +102,8 @@ func (this *Goodscontrollers)ShowIndexsx()  {
 		var imageGoods []models.IndexTypeGoodsBanner
 		qs.Filter("DisplayType",0).All(&textGoods)
 		qs.Filter("DisplayType",1).All(&imageGoods)
-		fmt.Println("1111111111111111")
-		fmt.Println(v.Image)
+		//fmt.Println("1111111111111111")
+		//fmt.Println(v.Image)
 		//定义行容器
 		temp:=make(map[string]interface{})
 		//行容器中有个类型对象v 有textGoods文章商品和imageGoods图片商品
@@ -160,6 +158,170 @@ func (this *Goodscontrollers)ShowIndexsx()  {
 	
 	this.TplName="index_sx.html"
 }
+//展示商品详情
+func (this *Goodscontrollers)ShowDetail(){
+	//获取数据
+	id,err:=this.GetInt("Id")
+	//校验数据
+	if err!=nil{
+		beego.Error("获取连接数据失败")
+		this.Redirect("/indexsx",302)
+		return
+	}
+	//处理数据
+	o:=orm.NewOrm()
+	var goodsSku models.GoodsSKU
+	//goodsSku.Id=id
+	////fmt.Println(id)
+	//err=o.Read(&goodsSku)
+	////fmt.Println(111111111)
+	//if err!=nil{
+	//	beego.Error("id不存在，获取id失败")
+	//	this.Redirect("/indexsx",302)
+	//	return
+	//}
+	//展示商品详情实现
+	o.QueryTable("GoodsSKU").RelatedSel("Goods","GoodsType").Filter("Id",id).One(&goodsSku)
+
+
+	//获取同一类型的新品推荐
+	var newGoods []models.GoodsSKU
+	qs:=o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Name",goodsSku.GoodsType.Name)
+	qs.OrderBy("-Time").Limit(2,0).All(&newGoods)
+	//返回数据
+	this.Data["newGoods"]=newGoods
+	this.Data["goodsSku"]=goodsSku
+	this.TplName="detail.html"
+}
+//封装分页函数
+func PageEdit(pageCount int,pageIndex int)[]int{
+	//不足五页
+	var pages []int
+	if pageCount < 5{
+		for i:=1;i<=pageCount;i++{
+			pages = append(pages,i)
+		}
+	}else if pageIndex <= 3{
+		for i:=1;i<=5;i++{
+			pages = append(pages,i)
+		}
+	}else if pageIndex >= pageCount -2{
+		for i:=pageCount - 4;i<=pageCount;i++{
+			pages = append(pages,i)
+		}
+	}else {
+		for i:=pageIndex - 2;i<=pageIndex + 2;i++{
+			pages = append(pages,i)
+		}
+	}
+
+	return pages
+}
+//展示商品列表页
+func (this *Goodscontrollers)ShowList()  {
+	//获取数据
+	/*id,err:=this.GetInt("id")
+	//校验数据
+	//fmt.Println(111111111111)
+	if err!=nil{
+		beego.Error("获取商品类型连接失败")
+		this.Redirect("/indexsx",302)
+		return
+	}
+	//处理数据
+	o:=orm.NewOrm()
+	//获取所有同一类型的商品
+	var goods []models.GoodsSKU
+	//或排序方式
+	sort:=this.GetString("sort")
+	if sort==""{
+		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id",id).All(&goods)
+	}else if sort=="price"{
+		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id",id).OrderBy("Price").All(&goods)
+	}else {
+		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id",id).OrderBy("-Sales").All(&goods)
+	}
+	o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id",id).All(&goods)
+
+	this.Data["id"]=id
+	this.Data["sort"]=sort
+	this.Data["goods"]=goods
+	//fmt.Println(222222222222222,goods)
+	this.TplName="list.html"*/
+	id,err := this.GetInt("id")
+	//校验数据
+	if err != nil {
+		beego.Error("类型不存在")
+		this.Redirect("/index_sx",302)
+		return
+	}
+	//处理数据
+	o := orm.NewOrm()
+	var goods []models.GoodsSKU
+	//获取排序方式
+	sort := this.GetString("sort")
+
+	//实现分页
+
+	qs := o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id",id)
+	//获取总页码
+	count,_ := qs.Count()
+	pageSize := 1
+	pageCount := int(math.Ceil(float64(count) / float64(pageSize)))
+	//获取当前页码
+	pageIndex,err := this.GetInt("pageIndex")
+	if err != nil {
+		pageIndex = 1
+	}
+	pages := PageEdit(pageCount,pageIndex)
+	this.Data["pages"] = pages
+	//获取上一页，下一页的值
+	var prePage,nextPage int
+	//设置个范围
+	if pageIndex -1 <= 0{
+		prePage = 1
+	}else {
+		prePage = pageIndex - 1
+	}
+
+
+	if pageIndex +1 >= pageCount{
+		nextPage = pageCount
+	}else {
+		nextPage = pageIndex + 1
+	}
+
+
+	this.Data["prePage"] = prePage
+	this.Data["nextPage"] = nextPage
+
+	qs = qs.Limit(pageSize,pageSize*(pageIndex - 1))
+
+	//获取排序
+	if sort == ""{
+		qs.All(&goods)
+	}else if sort == "price"{
+		qs.OrderBy("Price").All(&goods)
+	}else {
+		qs.OrderBy("-Sales").All(&goods)
+	}
+
+	this.Data["sort"] = sort
+
+this.Data["pageIndex"]=pageIndex
+fmt.Println(pageIndex)
+
+	//返回数据
+	this.Data["id"] = id
+	this.Data["goods"] = goods
+	this.TplName = "list.html"
+}
+
+
+
+
+
+
 
 /*
 //展示商品详情
@@ -282,3 +444,4 @@ func (this *Goodscontrollers)ShowList()  {
 	this.Data["goods"] = goods
 	this.TplName = "list.html"
 }*/
+

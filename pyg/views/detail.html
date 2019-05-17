@@ -8,6 +8,7 @@
 
 </head>
 <body>
+{{$ip:="http://192.168.91.88:8888/"}}
 	<div class="header_con">
 		<div class="header">
 			<div class="welcome fl">欢迎来到品优购生鲜!</div>
@@ -33,13 +34,13 @@
 	</div>
 
 	<div class="search_bar clearfix">
-		<a href="index.html" class="logo fl"><img src="/static/images/logo.png"></a>
+		<a href="index.html" class="logo fl"><img src="{{$ip}}{{.goodsSku.Image}}"></a>
 		<div class="search_con fl">
 			<input type="text" class="input_text fl" name="" placeholder="搜索商品">
 			<input type="button" class="input_btn fr" name="" value="搜索">
 		</div>
 		<div class="guest_cart fr">
-			<a href="cart.html" class="cart_name fl">我的购物车</a>
+			<a href="/user/cart" class="cart_name fl">我的购物车</a>
 			<div class="goods_count fl" id="show_count">1</div>
 		</div>
 	</div>
@@ -77,19 +78,19 @@
 	</div>
 
 	<div class="goods_detail_con clearfix">
-		<div class="goods_detail_pic fl"><img src="/static/images/goods_detail.jpg"></div>
+		<div class="goods_detail_pic fl"><img src="{{$ip}}{{.goodsSku.Image}}"></div>
 
 		<div class="goods_detail_list fr">
-			<h3>大兴大棚草莓</h3>
-			<p>草莓浆果柔软多汁，味美爽口，适合速冻保鲜贮藏。草莓速冻后，可以保持原有的色、香、味，既便于贮藏，又便于外销。</p>
+			<h3>{{.goodsSku.Name}}</h3>
+			<p>{{.goodsSku.Desc}}</p>
 			<div class="prize_bar">
-				<span class="show_pirze">¥<em>16.80</em></span>
-				<span class="show_unit">单  位：500g</span>
+				<span class="show_pirze">¥<em>{{.goodsSku.Price}}</em></span>
+				<span class="show_unit">单  位：{{.goodsSku.Unite}}</span>
 			</div>
 			<div class="goods_num clearfix">
 				<div class="num_name fl">数 量：</div>
 				<div class="num_add fl">
-					<input type="text" class="num_show fl" value="1">
+					<input type="text" class="num_show fl" goodsId="{{.goodsSku.Id}}" value="1">
 					<a href="javascript:;" class="add fr">+</a>
 					<a href="javascript:;" class="minus fr">-</a>	
 				</div> 
@@ -97,7 +98,7 @@
 			<div class="total">总价：<em>16.80元</em></div>
 			<div class="operate_btn">
 				<a href="javascript:;" class="buy_btn">立即购买</a>
-				<a href="javascript:;" class="add_cart" id="add_cart">加入购物车</a>				
+				<a href="javascript:;" class="add_cart" id="add_cart" >加入购物车</a>
 			</div>
 		</div>
 	</div>
@@ -106,17 +107,13 @@
 		<div class="l_wrap fl clearfix">
 			<div class="new_goods">
 				<h3>新品推荐</h3>
-				<ul>
+				<ul>{{range .newGoods}}
 					<li>
-						<a href="#"><img src="images/goods/goods001.jpg"></a>
-						<h4><a href="#">进口柠檬</a></h4>
-						<div class="prize">￥3.90</div>
+						<a href="/goodsDetail?Id={{.Id}}"><img src="{{$ip}}{{.Image}}"></a>
+						<h4><a href="/goodsDetail?Id={{.Id}}">{{.Name}}</a></h4>
+						<div class="prize">{{.Price}}</div>
 					</li>
-					<li>
-						<a href="#"><img src="images/goods/goods002.jpg"></a>
-						<h4><a href="#">玫瑰香葡萄</a></h4>
-						<div class="prize">￥16.80</div>
-					</li>
+					{{end}}
 				</ul>
 			</div>
 		</div>
@@ -130,7 +127,7 @@
 			<div class="tab_content">
 				<dl>
 					<dt>商品详情：</dt>
-					<dd>草莓采摘园位于北京大兴区 庞各庄镇四各庄村 ，每年1月-6月面向北京以及周围城市提供新鲜草莓采摘和精品礼盒装草莓，草莓品种多样丰富，个大香甜。所有草莓均严格按照有机标准培育，不使用任何化肥和农药。草莓在采摘期间免洗可以直接食用。欢迎喜欢草莓的市民前来采摘，也欢迎各大单位选购精品有机草莓礼盒，有机草莓礼盒是亲朋馈赠、福利送礼的最佳选择。 </dd>
+					<dd> {{.goodsSku.Goods.Detail}}</dd>
 				</dl>
 			</div>
 
@@ -154,7 +151,7 @@
 	</div>
 	<div class="add_jump"></div>
 
-	<script type="text/javascript" src="js/jquery-1.12.2.js"></script>
+	<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 	<script type="text/javascript">
 		var $add_x = $('#add_cart').offset().top;
 		var $add_y = $('#add_cart').offset().left;
@@ -164,7 +161,30 @@
 
 		$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'})
 		$('#add_cart').click(function(){
-			$(".add_jump").stop().animate({
+
+    //添加购物车 ajax 自定义属性atte 原有属性用prop  要想获取定要的数据又没在页面展示 可以用隐藏域传值
+   		 goodsId=$('.num_show').attr('goodsId')
+   		 num=$('.num_show').val()
+		// json拼接
+        param={"goodsId":goodsId,"num":num}
+        alert(param)
+        $.post("/addCart",param,function () {
+            if(data.errno != 5){
+                alert(data.errmsg)
+            }
+        })
+
+
+
+
+
+
+
+
+
+
+
+$(".add_jump").stop().animate({
 				'left': $to_y+7,
 				'top': $to_x+7},
 				"fast", function() {
@@ -174,6 +194,59 @@
 
 			});
 		})
+
+		// 计算总价=单价乘以数量
+		function CalTotalPrice() {
+		    // 获取单价  获取input的值用value  获取非input的值用text
+			price=$('.show_pirze').children('em').text()
+			// 把单价string类型转换为float类型
+       		price=parseFloat(price)
+			// 数量
+			count=$('.num_show').val()
+            // 把单价string类型转换为int类型
+			count=parseInt(count)
+            //计算总价 弱类型语言
+			totalprice=count*price
+            //设置总价
+			$('.total').children('em').text(totalprice.toFixed(2)+"元")
+			// alert(222222)
+
+        }
+        CalTotalPrice()
+		// 招标掐,找事件,写方法
+		// 点击添加商品数量
+		$('.add').click(function () {
+			num=$('.num_show').val()
+			//js从页面上获取的数据都是strin类型
+			num=parseInt(num)
+			num+=1
+			$('.num_show').val(num)
+			// alert(11111)
+            CalTotalPrice()
+        })
+
+        // 点击减少商品数量
+		$('.minus').click(function () {
+			num=$('.num_show').val()
+			num=parseInt(num)-1
+			if (num<=0){
+			    num=1
+			}
+			$('.num_show').val(num)
+			CalTotalPrice()
+        })
+
+		//手动输入商品数量
+		$('.num_show').blur(function () {
+			//对输入的值做校验 判断是否为数字 空值 以及是否小于零
+			num=$(this).val()
+			if (num<=0 ||isNaN(num) || num.trim().length==0){
+			    num=1
+			    $(this).val(num)
+			}
+			CalTotalPrice()
+        })
+
 	</script>
 	
 </body>
