@@ -66,7 +66,7 @@ func (this *Cartcontrollers)HandleAddCart()  {
 }
 
 //展示购物车
-func (this *Goodscontrollers)ShowCart()  {
+func (this *Cartcontrollers)ShowCart()  {
 	//获取数据
 
 
@@ -129,4 +129,82 @@ func (this *Goodscontrollers)ShowCart()  {
 	this.Data["goods"]=goods
 
 	this.TplName="cart.html"
+}
+
+//处理购物车数量
+func (this *Cartcontrollers)HandleUpCart()  {
+	id,err:=this.GetInt("goodsId")
+	count,err2:=this.GetInt("count")
+	resp := make(map[string]interface{})
+	defer RespFunc(&this.Controller,resp)
+
+	if err != nil || err2 != nil {
+		resp["errno"] = 1
+		resp["errmsg"] = "传输数据不完整"
+		return
+	}
+	name := this.GetSession("name")
+	if name == nil {
+		resp["errno"] = 3
+		resp["errmsg"] = "当前用户未登录"
+		return
+	}
+
+	conn,err:=redis.Dial("tcp","192.168.91.88:6379")
+	if err!=nil{
+		resp["errno"]=2
+		resp["errmsg"]="redis连接错误"
+		return
+	}
+	defer conn.Close()
+
+	_,err=conn.Do("hset","cart_"+name.(string),id,count)
+	if err != nil {
+		resp["errno"] = 4
+		resp["errmsg"] = "redis写入失败"
+		return
+	}
+	resp["errno"] = 5
+	resp["errmsg"] ="OK"
+}
+
+
+//处理删除购物车数量
+func (this * Cartcontrollers)HandleDeleteCart()  {
+	id,err:=this.GetInt("goodsId")
+	resp := make(map[string]interface{})
+	defer RespFunc(&this.Controller,resp)
+	//校验数据  宏定义  枚举
+	if err != nil {
+		resp["errno"] = 1
+		resp["errmsg"] = "删除链接错误"
+		return
+	}
+
+	//查看是否是登录状态
+	name := this.GetSession("name")
+	if name == nil {
+		resp["errno"] = 2
+		resp["errmsg"] = "当前用户不在登录状态"
+		return
+	}
+	//向redis中写入数据
+	conn,err :=redis.Dial("tcp","192.168.91.88:6379")
+	if err != nil {
+		resp["errno"] = 3
+		resp["errmsg"] = "服务器异常"
+		return
+	}
+
+	defer conn.Close()
+
+	_,err = conn.Do("hdel","cart_"+name.(string),id)
+	if err != nil {
+		resp["errno"] = 4
+		resp["errmsg"] = "数据库异常"
+		return
+	}
+
+	resp["errno"] = 5
+	resp["errmsg"] = "OK"
 }

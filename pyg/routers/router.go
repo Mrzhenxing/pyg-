@@ -37,8 +37,21 @@ func init() {
 	//	加入购物车
 	beego.Router("/addCart", &controllers.Cartcontrollers{}, "post:HandleAddCart")
 	//展示购物车
-	beego.Router("/user/showCart",&controllers.Goodscontrollers{},"get:ShowCart")
-}
+	beego.Router("/user/showCart",&controllers.Cartcontrollers{},"get:ShowCart")
+	//更改购物车数量
+	beego.Router("/upCart",&controllers.Cartcontrollers{},"post:HandleUpCart")
+	//删除购物车商品
+	beego.Router("/deleteCart",&controllers.Cartcontrollers{},"post:HandleDeleteCart")
+    //添加商品到订单
+	beego.Router("/user/addOrder",&controllers.OrderController{},"post:ShowOrder")
+	//提交订单
+	beego.Router("/pushOrder",&controllers.OrderController{},"post:HandlePushOrder")
+	//用户订单页面
+	beego.Router("/user/order",&controllers.Usercontrollers{},"get:ShowUserOrder")
+
+	}
+
+
 func guolvfuc(ctx *context.Context) {
 	name := ctx.Input.Session("name")
 	if name == nil {

@@ -24,7 +24,7 @@ func (this *Usercontrollers) ShowRegister() {
 	this.TplName = "register.html"
 }
 
-//
+//处理注册页面
 func RespFunc(this *beego.Controller, resp map[string]interface{}) {
 	//3.把容器传递给前段
 	this.Data["json"] = resp
@@ -468,4 +468,8 @@ func (this *Usercontrollers) HandleSite() {
 	//返回数据
 	this.Redirect("/user/user_center_site", 302)
 
+}
+
+func (this *Usercontrollers)ShowUserOrder()  {
+	
 }

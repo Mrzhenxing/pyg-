@@ -13,6 +13,7 @@ type User struct {
 	Email string`orm:"null"`
 	Active bool `orm:"default(false)"`
 	Address []*Address `orm:"reverse(many)"`
+	OrderInfos []*OrderInfo `orm:"reverse(many)"`
 
 }
 
@@ -24,6 +25,7 @@ type Address struct {
 	Phone string `orm:"size(11)"`
 	IsDefault bool`rom:"default(false)"`
 	User *User `orm:"rel(fk)"`
+	OrderInfos []*OrderInfo `orm:"reverse(many)"`
 
 
 }
@@ -93,12 +95,12 @@ type IndexPromotionBanner struct {//首页促销商品展示表
 
 type OrderInfo struct {//订单表
 	Id 				int
-	OrderId         string  `orm:"unique"`
+	OrderId         string  `orm:"unique"`		//订单号
 	User 			*User	`orm:"rel(fk)"`		//用户
 	Address 		*Address`orm:"rel(fk)"`		//地址
 	PayMethod 		int							//付款方式
-	TotalCount 	int		`orm:"default(1)"`	//商品数量
-	TotalPrice 	int							//商品总价
+	TotalCount 		int		`orm:"default(1)"`	//商品数量
+	TotalPrice 		int							//商品总价
 	TransitPrice 	int							//运费
 	Orderstatus 	int 	`orm:"default(1)"`	//订单状态
 	TradeNo 		string	`orm:"default('')"`	//支付编号
@@ -113,7 +115,7 @@ type OrderGoods struct {//订单商品表
 	OrderInfo 	*OrderInfo	`orm:"rel(fk)"`	//订单
 	GoodsSKU 	*GoodsSKU	`orm:"rel(fk)"`	//商品
 	Count 		int		`orm:"default(1)"`	//商品数量
-	Price 		int							//商品价格
+	Price 		int						//商品价格
 	Comment 	string	`orm:"default('')"` //评论
 }
 
